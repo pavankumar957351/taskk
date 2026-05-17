@@ -1,0 +1,60 @@
+# Import Required Libraries
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import sum, avg, max, min
+
+# Create Spark Session
+spark = SparkSession.builder \
+    .appName("Big Data Analysis") \
+    .getOrCreate()
+
+# Load Dataset
+df = spark.read.csv("sales_data.csv", header=True, inferSchema=True)
+
+# Display Dataset
+print("===== DATASET PREVIEW =====")
+df.show(5)
+
+# Print Schema
+print("===== DATASET SCHEMA =====")
+df.printSchema()
+
+# Total Sales
+total_sales = df.select(sum("SALES")).collect()[0][0]
+print(f"Total Sales: {total_sales}")
+
+# Average Sales
+average_sales = df.select(avg("SALES")).collect()[0][0]
+print(f"Average Sales: {average_sales}")
+
+# Maximum Sales
+max_sales = df.select(max("SALES")).collect()[0][0]
+print(f"Maximum Sales: {max_sales}")
+
+# Minimum Sales
+min_sales = df.select(min("SALES")).collect()[0][0]
+print(f"Minimum Sales: {min_sales}")
+
+# Country Wise Sales
+print("===== COUNTRY WISE SALES =====")
+country_sales = df.groupBy("COUNTRY") \
+    .agg(sum("SALES").alias("TOTAL_SALES"))
+
+country_sales.show()
+
+# Product Line Wise Sales
+print("===== PRODUCT LINE SALES =====")
+product_sales = df.groupBy("PRODUCTLINE") \
+    .agg(sum("SALES").alias("TOTAL_SALES"))
+
+product_sales.show()
+
+# Save Output
+country_sales.write.mode("overwrite").csv(
+    "country_sales_output",
+    header=True
+)
+
+print("Analysis Completed Successfully")
+
+# Stop Spark Session
+spark.stop()
